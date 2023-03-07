@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "894772238798",
+    "project_id": "imagee-tool",
+    "storage_bucket": "imagee-tool.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894772238798:android:979e094c71611330f3b39f",
+        "android_client_info": {
+          "package_name": "com.example.inventory_product_image_links"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894772238798-nd0a5s902j7m10vueeb5qetaopbdu0mf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvIFM-7eT0VAy8pFjc3GHvTZNvOsE0b_o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894772238798-nd0a5s902j7m10vueeb5qetaopbdu0mf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
