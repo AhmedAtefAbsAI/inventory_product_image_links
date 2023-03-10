@@ -41,18 +41,12 @@ class SuperButton extends StatelessWidget {
           var directory = await DownloadsPath.downloadsDirectory(
               dirType: DownloadDirectoryTypes.downloads);
 
-<<<<<<< HEAD
           var storageFile = io.File(
               '${directory?.path}/StorageFileGeneralInventory[1]2.json');
-=======
-          var storageFile =
-              io.File('${directory?.path}/StorageFileGeneralInventory.json');
->>>>>>> 669e693ab1598e7ef34f2efc12c75c71405f8052
 
           String data =
               await rootBundle.loadString("assets/generalInventory.json");
           var jsonResult = jsonDecode(data);
-<<<<<<< HEAD
 
           var i = 0;
 
@@ -204,109 +198,6 @@ class SuperButton extends StatelessWidget {
 }
 
 Future<io.File?> downloadImageToFile(String url) async {
-=======
-
-          var i = 0;
-
-          for (Map map in jsonResult) {
-            if (i == -1) {
-              break;
-            }
-
-            var oldLink = await map['productPhoto'];
-
-            final file = await downloadImageToFile(oldLink);
-
-            //uploading a file to drive
-            int length = await file.length();
-            var media = Media(file.openRead(), length);
-
-            //modify access permessions here
-            var driveFile = drive.File();
-            //modify file name
-            driveFile.name = await map['productName'];
-
-            String resultId = "";
-
-            try {
-              await driveApi.files
-                  .create(driveFile,
-                      uploadMedia: media,
-
-                      //specify the parameters you want to be able to retrieve here and down when using get
-                      $fields: 'id')
-                  .then((value) {
-                resultId = value.id!;
-              });
-            } on Exception catch (e) {
-              driveApi = await getDriveApi();
-              await driveApi.files
-                  .create(driveFile,
-                      uploadMedia: media,
-
-                      //specify the parameters you want to be able to retrieve here and down when using get
-                      $fields: 'id')
-                  .then((value) {
-                resultId = value.id!;
-              });
-            }
-            try {
-              //modify permissions for viewing here
-              await driveApi.permissions.create(
-                drive.Permission()
-                  ..type = 'anyone'
-                  ..role = 'reader',
-                resultId,
-              );
-            } on Exception catch (e) {
-              driveApi = await getDriveApi();
-              //modify permissions for viewing here
-              await driveApi.permissions.create(
-                drive.Permission()
-                  ..type = 'anyone'
-                  ..role = 'reader',
-                resultId,
-              );
-            }
-            String modifiedLink = "";
-            try {
-              await driveApi.files.get(resultId, $fields: 'id ').then((value) {
-                modifiedLink = "https://drive.google.com/uc?export=view&id=" +
-                    resultId; //3azamaaaaaaaaaaaaaaaaaaaaaaaaaa
-
-                i++;
-              });
-            } on Exception catch (e) {
-              driveApi = await getDriveApi();
-
-              await driveApi.files.get(resultId, $fields: 'id').then((value) {
-                modifiedLink = "https://drive.google.com/uc?export=view&id=" +
-                    resultId; //3azamaaaaaaaaaaaaaaaaaaaaaaaaaa
-
-                i++;
-              });
-            }
-
-            String newMap = jsonEncode({
-                  'barcode': map['barcode'],
-                  'productName': map['productName'],
-                  'numberOfPackageInsideTheCarton':
-                      map['numberOfPackageInsideTheCarton'],
-                  'productPhoto': modifiedLink,
-                  'purchaseUnit': map['purchaseUnit'],
-                  'saleUnit': map['saleUnit'],
-                  'section': map['section'],
-                }) +
-                ',';
-            await storageFile.writeAsString(newMap, mode: io.FileMode.append);
-          }
-        },
-        child: Text('$counter'));
-  }
-}
-
-Future<io.File> downloadImageToFile(String url) async {
->>>>>>> 669e693ab1598e7ef34f2efc12c75c71405f8052
   while (true) {
     try {
       var imageId = await ImageDownloader.downloadImage(url,
@@ -319,22 +210,7 @@ Future<io.File> downloadImageToFile(String url) async {
       if (path == null) continue;
       return io.File(path!);
     } catch (e) {
-<<<<<<< HEAD
       return null;
-=======
-      var directory = await DownloadsPath.downloadsDirectory(
-          dirType: DownloadDirectoryTypes.downloads);
-
-      var imageId = await ImageDownloader.downloadImage(url,
-          outputMimeType: "image/png",
-          destination: AndroidDestinationType.directoryDownloads);
-
-      // ha
-
-      String? path = await ImageDownloader.findPath(imageId!);
-      if (path == null) continue;
-      return io.File(path);
->>>>>>> 669e693ab1598e7ef34f2efc12c75c71405f8052
     }
   }
 }
