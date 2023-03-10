@@ -2,10 +2,11 @@
     package="com.example.inventory_product_image_links">
    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
    <application
+        android:requestLegacyExternalStorage="true"
         android:label="inventory_product_image_links"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <activity
+        <activity 
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +12,7 @@ import 'package:lecle_downloads_path_provider/lecle_downloads_path_provider.dart
 import 'dart:io' as io;
 
 Future<void> main(List<String> args) async {
-  runApp(const MaterialApp(
+  runApp(MaterialApp(
     title: "Image Tool",
     home: Scaffold(
       body: Center(
@@ -24,115 +23,196 @@ Future<void> main(List<String> args) async {
 }
 
 class SuperButton extends StatelessWidget {
-  const SuperButton({
+  SuperButton({
     Key? key,
   }) : super(key: key);
+
+  int counter = 0;
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
         onPressed: () async {
+          /*   
           //signing in to google and getting credentials
-          final driveApi = await getDriveApi();
-          //saving index
-          final indexDirectory = await DownloadsPath.downloadsDirectory(
-              dirType: DownloadDirectoryTypes.downloads);
-
-          final indexFile = io.File('${indexDirectory?.path}/index.txt');
-          int i = 0;
+          var driveApi = await getDriveApi();
 
           //saving inventory
-          final directory = await DownloadsPath.downloadsDirectory(
+          var directory = await DownloadsPath.downloadsDirectory(
               dirType: DownloadDirectoryTypes.downloads);
 
-          final storageFile =
-              io.File('${directory?.path}/UpdatedGeneralInventory.json');
+          var storageFile = io.File(
+              '${directory?.path}/StorageFileGeneralInventory[1]2.json');
 
           String data =
               await rootBundle.loadString("assets/generalInventory.json");
-          final jsonResult = jsonDecode(data);
+          var jsonResult = jsonDecode(data);
 
-          for (var map in jsonResult) {
-            try {
-              var oldLink = map['productPhoto'];
+          var i = 0;
 
-              final file = await downloadImageToFile(oldLink);
+          //await downloadAndUploadAndSave(jsonResult, i, driveApi, storageFile, directory); */
 
-              //uploading a file to drive
-              int length = await file.length();
-              var media = Media(file.openRead(), length);
+          String OldData =
+              await rootBundle.loadString("assets/oldGeneralInventory.json");
+          var oldJson = jsonDecode(OldData);
+          String newData =
+              await rootBundle.loadString("assets/generalInventory.json");
+          var newJson = jsonDecode(newData);
 
-              //modify access permessions here
-              var driveFile = drive.File();
-              //modify file name
-              driveFile.name = map['productName'];
-
-              String resultId = "";
-
-              await driveApi.files
-                  .create(driveFile,
-                      uploadMedia: media,
-
-                      //specify the parameters you want to be able to retrieve here and down when using get
-                      $fields: 'id , webContentLink , webViewLink')
-                  .then((value) {
-                resultId = value.id!;
-              });
-
-              //modify permissions for viewing here
-              await driveApi.permissions.create(
-                drive.Permission()
-                  ..type = 'anyone'
-                  ..role = 'reader',
-                resultId,
-              );
-
-              driveApi.files
-                  .get(resultId, $fields: 'id , webContentLink , webViewLink')
-                  .then((value) {
-                final link = (value as drive.File).webViewLink;
-                final modifiedLink =
-                    "https://drive.google.com/uc?export=view&id=$resultId"; //3azamaaaaaaaaaaaaaaaaaaaaaaaaaa
-
-                map['productPhoto'] = modifiedLink;
-
-                print('\n\n  ');
-                print('Laaaaaaaaaaaaaaaaaaaaaaaaast index is $i');
-                print('\n\n  ');
-              });
-              await indexFile.writeAsString("$i");
-
-              await storageFile.writeAsString(jsonEncode(map),
-                  mode: FileMode.append);
-              i++;
-            } on Exception catch (e) {
-              print(e);
-              final tdirectory = await DownloadsPath.downloadsDirectory(
-                  dirType: DownloadDirectoryTypes.downloads);
-
-              final tstorageFile =
-                  io.File('${tdirectory?.path}/damagedItems.json');
-              await tstorageFile.writeAsString(jsonEncode(map),
-                  mode: FileMode.append);
-              i++;
-              await indexFile.writeAsString(
-                "$i",
-              );
-              continue;
-            }
-          }
+          //checkForDuplicates(newJson);
+          checkForMissing(oldJson, newJson);
         },
-        child: Icon(Icons.start));
+        child: Text('$counter'));
+  }
+
+  void checkForDuplicates(newJson) {
+    List<String> duplicateTestList = [];
+    List<String> duplicatesList = [];
+
+    for (Map map in newJson) {
+      if (duplicateTestList.contains(map['barcode']))
+        duplicatesList.add(map['barcode']);
+      else
+        duplicateTestList.add(map['barcode']);
+    }
+
+    for (var item in duplicatesList) print(item + '\n');
+  }
+
+  void checkForMissing(oldJson, newJson) {
+    List<String> missingList = [];
+    List<String> newJsonList = [];
+    for (Map map in newJson) newJsonList.add(map['barcode']);
+
+    for (Map map in oldJson) {
+      if (!newJsonList.contains(map['barcode']))
+        missingList.add(map['barcode']);
+    }
+
+    for (var item in missingList) print(item + '\n');
+  }
+
+  Future<void> downloadAndUploadAndSave(jsonResult, int i, DriveApi driveApi,
+      io.File storageFile, io.Directory? directory) async {
+    for (Map map in jsonResult) {
+      if (i == -1) {
+        break;
+      }
+
+      var oldLink = await map['productPhoto'];
+
+      final file = await downloadImageToFile(oldLink);
+      if (file == null) continue;
+
+      //uploading a file to drive
+      int length = await file.length();
+      var media = Media(file.openRead(), length);
+
+      //modify access permessions here
+      var driveFile = drive.File();
+      //modify file name
+      driveFile.name = await map['productName'];
+
+      String resultId = "";
+
+      try {
+        await driveApi.files
+            .create(driveFile,
+                uploadMedia: media,
+
+                //specify the parameters you want to be able to retrieve here and down when using get
+                $fields: 'id')
+            .then((value) {
+          resultId = value.id!;
+        });
+      } on Exception catch (e) {
+        driveApi = await getDriveApi();
+        await driveApi.files
+            .create(driveFile,
+                uploadMedia: media,
+
+                //specify the parameters you want to be able to retrieve here and down when using get
+                $fields: 'id')
+            .then((value) {
+          resultId = value.id!;
+        });
+      }
+      try {
+        //modify permissions for viewing here
+        await driveApi.permissions.create(
+          drive.Permission()
+            ..type = 'anyone'
+            ..role = 'reader',
+          resultId,
+        );
+      } on Exception catch (e) {
+        driveApi = await getDriveApi();
+        //modify permissions for viewing here
+        await driveApi.permissions.create(
+          drive.Permission()
+            ..type = 'anyone'
+            ..role = 'reader',
+          resultId,
+        );
+      }
+      String modifiedLink = "";
+      try {
+        await driveApi.files.get(resultId, $fields: 'id ').then((value) {
+          modifiedLink = "https://drive.google.com/uc?export=view&id=" +
+              resultId; //3azamaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+          i++;
+        });
+      } on Exception catch (e) {
+        driveApi = await getDriveApi();
+
+        await driveApi.files.get(resultId, $fields: 'id').then((value) {
+          modifiedLink = "https://drive.google.com/uc?export=view&id=" +
+              resultId; //3azamaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+          i++;
+        });
+      }
+
+      String newMap = jsonEncode({
+            'barcode': map['barcode'],
+            'productName': map['productName'],
+            'numberOfPackageInsideTheCarton':
+                map['numberOfPackageInsideTheCarton'],
+            'productPhoto': modifiedLink,
+            'purchaseUnit': map['purchaseUnit'],
+            'saleUnit': map['saleUnit'],
+            'section': map['section'],
+          }) +
+          ',';
+
+      try {
+        await storageFile.writeAsString(newMap, mode: io.FileMode.append);
+      } on Exception catch (e) {
+        storageFile =
+            io.File('${directory?.path}/StorageFileGeneralInventory[1]2.json');
+        await storageFile.writeAsString(newMap, mode: io.FileMode.append);
+      }
+    }
   }
 }
 
-Future<io.File> downloadImageToFile(String url) async {
-  var imageId = await ImageDownloader.downloadImage(url);
+Future<io.File?> downloadImageToFile(String url) async {
+  while (true) {
+    try {
+      var imageId = await ImageDownloader.downloadImage(url,
+          outputMimeType: "image/png",
+          destination: AndroidDestinationType.directoryDownloads);
 
-  // ha
+      // ha
 
-  var path = await ImageDownloader.findPath(imageId!);
-  return io.File(path!);
+      String? path = await ImageDownloader.findPath(imageId!);
+      if (path == null) continue;
+      return io.File(path!);
+    } catch (e) {
+      return null;
+    }
+  }
 }
 
 Future<DriveApi> getDriveApi() async {
